@@ -7,7 +7,8 @@
 		"SELECT" => "SELECT * FROM `table_name` WHERE condition1, condition2 ORDER BY column1;",
 		"UPDATE" => "UPDATE `table_name` SET column1 = value1, column2 = value2 WHERE condition1, condition2;",
 		"INSERT" => "INSERT INTO `table_name` (column1, column2) VALUES (value1, value2);",
-		"CREATE" => "CREATE TABLE `table_name` (column1 INTEGER PRIMARY KEY ASC, column2 TEXT);",
+		"CREATE" => "CREATE TABLE `table_name` (column1 INTEGER, column2 TEXT);",
+		"ALTER" => "ALTER TABLE `table_name` ADD column3 TEXT;",
 		"DROP" => "DROP TABLE `table_name`;",
 		"DELETE" => "DELETE FROM `table_name` WHERE condition1, condition2;"
 	);
@@ -22,13 +23,24 @@
 						<title>Sqlitor</title>
 						<style>
 							table *:not(th){
-								font-size:0.9em;
+								font-size:0.7rem;
 							}
 							table:not(.horizontal) td{
 								white-space: nowrap;
 								overflow: hidden;
 								text-overflow: ellipsis;
 								width: 200px;
+							}
+							.historyelement{
+								white-space: nowrap;
+								overflow: hidden;
+								text-overflow: ellipsis;
+								cursor:grab;
+								color: dimgray;
+								font-size:0.9rem;
+							}
+							.historyelement:hover {
+								color: steelblue;
 							}
 						</style>
 					</head>
@@ -68,9 +80,9 @@
 		$table.="<tr>";
 		foreach(array_keys($datas[0]) as $column){
 			if(empty($tableName) || empty($primaryKey)){
-				$table.="<th>".$column."</th>";
+				$table.="<th".(($column=='rowid')?" style='color: goldenrod;'":"").">".$column."</th>";
 			}else{
-				$table.="<th>".$column." <a href=\"?explore=$tableName&asc=$column\"><span class=\"icon-upload\" style='transform: rotate(180deg);'></span></a> <a href=\"?explore=$tableName&desc=$column\"><span class=\"icon-upload\"></span></a></th>";
+				$table.="<th".(($column==$primaryKey || $column=='rowid')?" style='color: goldenrod;'":"").">".$column." <a href=\"?explore=$tableName&asc=$column\"><span class=\"icon-upload\" style='transform: rotate(180deg);'></span></a> <a href=\"?explore=$tableName&desc=$column\"><span class=\"icon-upload\"></span></a></th>";
 			}
 		}
 		$table.="</tr>";
@@ -79,10 +91,10 @@
 		foreach($datas as $row){
 			$table.="<tr>";
 			foreach($row as $column => $value){
-				if(empty($tableName) || empty($primaryKey) || $column == $primaryKey){
-					$table.="<td data-label=\"$column\" ".(($column==$primaryKey)?"style='font-weight:bold;'":"").">".$value."</td>";
+				if(empty($tableName) || empty($primaryKey) ){
+					$table.="<td data-label=\"$column\" ".(($column=='rowid')?"style='font-weight:bold;'":"").">".$value."</td>";
 				}else{
-					$table.="<td data-label=\"$column\" ".(($column==$primaryKey)?"style='font-weight:bold;'":"")." onclick=\"editThisData(this,'$tableName','$primaryKey','$column')\" data-edit=\"false\"  data-primaryval=\"".$row[$primaryKey]."\" data-original=\"".base64_encode($value)."\">".$value."</td>";
+					$table.="<td data-label=\"$column\" ".(($column==$primaryKey || $column=='rowid')?"style='font-weight:bold;'":"")." onclick=\"editThisData(this,'$tableName','$primaryKey','$column')\" data-edit=\"false\"  data-primaryval=\"".$row[$primaryKey]."\" data-original=\"".base64_encode($value)."\">".$value."</td>";
 				}
 			}
 			$table.="</tr>";
@@ -107,8 +119,9 @@
 	if(!empty($_POST['db'])) $_SESSION['db'] = $_POST['db'];
 	if(!empty($_POST['password'])) $_SESSION['PASSWD'] = sha1($_POST['password']);
 	extract($_SESSION);
+
 	// render login if no db connexion
-	if(empty($db) || $_SESSION['PASSWD']!=PASSWD){ 
+	if(empty($db) || ( $PASSWD!=PASSWD && PASSWD != "" ) ){ 
 		render('
 			<div class="row">
 				<div class="col-lg-6 col-lg-offset-3 col-md-6 col-md-offset-3 col-sm-12">
@@ -228,21 +241,21 @@
 			if(!empty($_GET['desc'])) $link .= "&desc=".$_GET['desc'];
 			if($pageCount<20){
 				for($i=1;$i<=$pageCount;$i++){
-					$resultlayout .= '<a href="'.$link.'&page='.$i.'" class="button '.(($i==$_GET['page'])?"primary":"").'">'.$i.'</a>';
+					$resultlayout .= '<a href="'.$link.'&page='.$i.'" class="button small '.(($i==$_GET['page'])?"primary":"").'">'.$i.'</a>';
 				}
 			}else{
-				if($_GET['page']>6) $resultlayout .= '<a href="'.$link.'&page=1" class="button"><<</a>';
+				if($_GET['page']>6) $resultlayout .= '<a href="'.$link.'&page=1" class="button small"><<</a>';
 				for($i=$_GET['page']-5;$i<$_GET['page'];$i++){
-					if($i>0) $resultlayout .= '<a href="'.$link.'&page='.$i.'" class="button '.(($i==$_GET['page'])?"primary":"").'">'.$i.'</a>';
+					if($i>0) $resultlayout .= '<a href="'.$link.'&page='.$i.'" class="button small '.(($i==$_GET['page'])?"primary":"").'">'.$i.'</a>';
 				}
-				$resultlayout .= '<a href="'.$link.'&page='.$_GET['page'].'" class="button primary">'.$_GET['page'].'</a>';
+				$resultlayout .= '<a href="'.$link.'&page='.$_GET['page'].'" class="button small primary">'.$_GET['page'].'</a>';
 				for($i=$_GET['page']+1;$i<$_GET['page']+6;$i++){
-					if($i<=$pageCount) $resultlayout .= '<a href="'.$link.'&page='.$i.'" class="button '.(($i==$_GET['page'])?"primary":"").'">'.$i.'</a>';
+					if($i<=$pageCount) $resultlayout .= '<a href="'.$link.'&page='.$i.'" class="button small '.(($i==$_GET['page'])?"primary":"").'">'.$i.'</a>';
 				}
-				if($_GET['page']<$pageCount-6) $resultlayout .= '<a href="'.$link.'&page='.$pageCount.'" class="button">>></a>';
+				if($_GET['page']<$pageCount-6) $resultlayout .= '<a href="'.$link.'&page='.$pageCount.'" class="button small">>></a>';
 			}
-			$resultlayout .= '<button onclick="SaveAllEditData()" style="float:right;">SAVE ALL</button><button onclick="CancelAllEditData()" style="float:right;">CANCEL ALL</button>';
-			$resultlayout .= '<a href="'.$link.'&export=csv" target="_blank" class="button" style="float:right;">EXPORT TO CSV</a><a href="'.$link.'&export=json" target="_blank" class="button" style="float:right;">EXPORT TO JSON</a>';
+			$resultlayout .= '<button onclick="SaveAllEditData()" class="small" style="float:right;">SAVE ALL</button><button onclick="CancelAllEditData()" class="small" style="float:right;">CANCEL ALL</button>';
+			$resultlayout .= '<a href="'.$link.'&export=csv" target="_blank" class="button small" style="float:right;">EXPORT TO CSV</a><a href="'.$link.'&export=json" target="_blank" class="button small" style="float:right;">EXPORT TO JSON</a>';
 			$resultlayout .= '</p>';
 			$resultlayout .= '</div>';
 			$resultlayout .= '</div>';
@@ -264,7 +277,7 @@
 		// list of basic SQL cmds btns
 		foreach($cmds as $c => $cmd) $cmdslayout .="<input type=\"button\" value=\"$c\" onclick=\"cmd('$cmd')\" style='cursor: grab;'>";
 		// history list 
-		foreach(array_slice(array_reverse($history),0,10) as $cmd) $historylayout .= "<p onclick=\"cmd(this.innerHTML)\" style='cursor: grab;'>$cmd</p>";
+		foreach(array_slice(array_reverse($history),0,10) as $cmd) $historylayout .= "<p onclick=\"cmd(this.innerHTML)\" class=\"historyelement\">$cmd</p>";
 		// schema column layout
 		$tables = array_column($pdo->query("SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%';")->fetchAll(),'name');
 		foreach($tables as $t){ $schema[$t] = array_column($pdo->query("PRAGMA table_info($t)")->fetchAll(),'name');}
@@ -274,7 +287,7 @@
 			$schemalayout.='<div>';
 			$schemalayout.='<a href="?explore='.$t.'">SELECT</a> <i onclick="insert(\''.$t.'\')" style="cursor: grab;">'.$t.' <span class="icon-edit" ></span></i>';
 			$schemalayout.='<ul>';
-			foreach($columns as $c) $schemalayout.='<li onclick="insert(\''.$t.$c.'\')" style="cursor: grab;">'.$c.' <span class="icon-edit"></span></li>';
+			foreach($columns as $c) $schemalayout.='<li onclick="insert(\''.$t.'.'.$c.'\')" style="cursor: grab;">'.$c.' <span class="icon-edit"></span></li>';
 			$schemalayout.='</ul>';
 			$schemalayout.='</div>';
 		}
@@ -289,6 +302,7 @@
 							<textarea id="sql" name="sql" placeholder="Your command" required style="width: 100%;height: 20vh;">'.$_POST['sql'].'</textarea><br>
 							<input type="submit" value="EXECUTE COMMAND" class="tertiary">
 						</fieldset>
+						'.$historylayout.'
 					</form>
 					<script>
 						function cmd(sql){
