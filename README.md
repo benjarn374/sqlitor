@@ -9,7 +9,7 @@ Sqlitor (sqlite editor) is a one-file SQLITE database management tool written in
 - Browse tables
 - Edit rows
 - Export results to CSV or JSON
-- sha1 password protection
+- Optional protection with sha1 password
 
 # Design
 Sqlitor is eye-catching with Mini.css https://github.com/Chalarangelo/mini.css
