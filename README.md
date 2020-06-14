@@ -15,4 +15,5 @@ Sqlitor (sqlite editor) is a one-file SQLITE database management tool written in
 Sqlitor is eye-catching with Mini.css https://github.com/Chalarangelo/mini.css
 
 # How To add password ?
-Simply edit file and add your SHA1 password in config section
+Simply edit file and add your SHA1 password in config section on the top of the file.
+To generate your SHA1 password you can use https://www.sha1.fr/
