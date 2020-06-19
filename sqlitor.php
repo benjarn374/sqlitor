@@ -287,7 +287,7 @@
 			$schemalayout.='<div>';
 			$schemalayout.='<a href="?explore='.$t.'">SELECT</a> <i onclick="insert(\''.$t.'\')" style="cursor: grab;">'.$t.' <span class="icon-edit" ></span></i>';
 			$schemalayout.='<ul>';
-			foreach($columns as $c) $schemalayout.='<li onclick="insert(\''.$t.'.'.$c.'\')" style="cursor: grab;">'.$c.' <span class="icon-edit"></span></li>';
+			foreach($columns as $c) $schemalayout.='<li onclick="insert(\''.$c.'\')" style="cursor: grab;">'.$c.' <span class="icon-edit"></span></li>';
 			$schemalayout.='</ul>';
 			$schemalayout.='</div>';
 		}
