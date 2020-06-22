@@ -188,7 +188,8 @@
 						if($results){
 							$array = $results->fetchAll();
 							$affected=$results->rowCount();
-							$resultlayout .= '<pre>'.$sql.';<br><mark class="tertiary">Request successfully executed</mark>'.(($affected>0)?"<br>Affected rows: $affected":"").'</pre>';
+							$affected=$results->rowCount();
+							$resultlayout .= '<pre>'.$sql.';<br><mark class="tertiary">Request successfully executed</mark>'.(($affected>0)?"<br>Affected rows: $affected":"").((count($array)>0)?"<br>Selected rows: ".count($array):"").'</pre>';
 							if(count($array)>0) $resultlayout .= constructArray($array);
 						}
 					} catch(Exception $e) {
