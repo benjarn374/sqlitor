@@ -93,7 +93,7 @@
 			}
 		}
 		if(!empty($table)){
-			$table.="<th></th>";
+			$table.="<th>SQL</th>";
 		}
 		$table.="</tr>";
 		$table.="</thead>";
@@ -110,13 +110,16 @@
 			if(!empty($tableName)){
 				$rowWithoutRowId = $row;
 				unset($rowWithoutRowId['rowid']);
-				$columns = implode(',',array_keys($row));
-				$values = implode("\",\"",$row);
-				$sqlInsert = "INSERT INTO $tableName ($columns) VALUES (\"$values\");";
+				$columns = implode(",\n",array_keys($row));
+				$values = implode("\",\n\"",$row);
+				$sqlInsert = "INSERT INTO $tableName (\n$columns\n) VALUES (\n\"$values\"\n);";
 				$table.="<td>";
-				$table.="<a href=\"javascript:proposeSql('".base64_encode($sqlInsert)."')\">clone</a>";
+				$table.="<a href=\"javascript:proposeSql('".base64_encode($sqlInsert)."')\">insert</a>";
 				if(!empty($primaryKey)){
-					$sqlDelete = "DELETE FROM $tableName WHERE  $primaryKey=\"".$row[$primaryKey]."\";";
+					$updateSet = array();foreach($rowWithoutRowId as $k => $v) $updateSet[]="$k=\"$v\"";
+					$sqlUpdate = "UPDATE $tableName SET \n".implode(", \n",$updateSet)."\nWHERE $primaryKey=\"".$row[$primaryKey]."\";";
+					$table.=" &bull; <a href=\"javascript:proposeSql('".base64_encode($sqlUpdate)."')\">update</a>";
+					$sqlDelete = "DELETE FROM $tableName WHERE $primaryKey=\"".$row[$primaryKey]."\";";
 					$table.=" &bull; <a href=\"javascript:proposeSql('".base64_encode($sqlDelete)."')\">delete</a>";
 				}
 				echo "</td>";
