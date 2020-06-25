@@ -58,6 +58,13 @@
 		echo json_encode($array);
 		die();
 	}
+	// render a SQL command file
+	function renderToSql($sql){
+		header('Content-Type: application/sql');
+		header("Content-Disposition: attachment; filename=export.sql");
+		echo $sql;
+		die();
+	}
 	// render an array as CSV
 	function renderResultToCSV($array){
 		header("Content-Type: text/csv");
@@ -85,6 +92,9 @@
 				$table.="<th".(($column==$primaryKey || $column=='rowid')?" style='color: goldenrod;'":"").">".$column." <a href=\"?explore=$tableName&asc=$column\"><span class=\"icon-upload\" style='transform: rotate(180deg);'></span></a> <a href=\"?explore=$tableName&desc=$column\"><span class=\"icon-upload\"></span></a></th>";
 			}
 		}
+		if(!empty($table)){
+			$table.="<th></th>";
+		}
 		$table.="</tr>";
 		$table.="</thead>";
 		$table.="<tbody>";
@@ -96,6 +106,20 @@
 				}else{
 					$table.="<td data-label=\"$column\" ".(($column==$primaryKey || $column=='rowid')?"style='font-weight:bold;'":"")." onclick=\"editThisData(this,'$tableName','$primaryKey','$column')\" data-edit=\"false\"  data-primaryval=\"".$row[$primaryKey]."\" data-original=\"".base64_encode($value)."\">".$value."</td>";
 				}
+			}
+			if(!empty($tableName)){
+				$rowWithoutRowId = $row;
+				unset($rowWithoutRowId['rowid']);
+				$columns = implode(',',array_keys($row));
+				$values = implode("\",\"",$row);
+				$sqlInsert = "INSERT INTO $tableName ($columns) VALUES (\"$values\");";
+				$table.="<td>";
+				$table.="<a href=\"javascript:proposeSql('".base64_encode($sqlInsert)."')\">clone</a>";
+				if(!empty($primaryKey)){
+					$sqlDelete = "DELETE FROM $tableName WHERE  $primaryKey=\"".$row[$primaryKey]."\";";
+					$table.=" &bull; <a href=\"javascript:proposeSql('".base64_encode($sqlDelete)."')\">delete</a>";
+				}
+				echo "</td>";
 			}
 			$table.="</tr>";
 		}
@@ -260,6 +284,31 @@
 			$resultlayout .= '</p>';
 			$resultlayout .= '</div>';
 			$resultlayout .= '</div>';
+		}elseif(!empty($_GET['export'])){
+			// result layout if user explore a table
+			$t = $_GET['export'];
+			$sql = "";
+			// drop table
+			// $sql .= "-- DROP DATATABLE ;\n";
+			// $sql .= "DROP TABLE IF EXISTS `$t`;\n\n";
+			// create table from schema
+			$sql .= "-- CREATE DATATABLE ;\n";
+			$sql .= array_column($pdo->query("SELECT sql FROM sqlite_master WHERE type ='table' AND name = '$t';")->fetchAll(),'sql')[0].";\n\n";
+			
+			$schema = $pdo->query("PRAGMA table_info($t)")->fetchAll();
+			$data = $pdo->query("SELECT * FROM `$t`;")->fetchAll();
+
+			if(count($data)>0){
+				$sql .= "-- INSERT DATA ;\n";
+				$sql .= "INSERT INTO `$t` VALUES \n";
+				$insertedValues = array();
+				foreach($data as $result){
+					$insertedValues[]= "(\"".implode("\",\"",$result)."\")";
+				}
+				$sql .= implode(",\n",$insertedValues).";";
+			}
+			
+			renderToSql($sql);
 		}
 		// top bar layout
 		$toplayout = '
@@ -286,7 +335,7 @@
 			$schemalayout.='<input type="checkbox" id="collapse-'.$t.'" aria-hidden="true">';
 			$schemalayout.='<label for="collapse-'.$t.'" aria-hidden="true">'.$t.'</label>';
 			$schemalayout.='<div>';
-			$schemalayout.='<a href="?explore='.$t.'">SELECT</a> <i onclick="insert(\''.$t.'\')" style="cursor: grab;">'.$t.' <span class="icon-edit" ></span></i>';
+			$schemalayout.='<i onclick="insert(\''.$t.'\')" style="cursor: grab;">'.$t.' <span class="icon-edit" ></span></i> &bull; <a href="?explore='.$t.'">SELECT</a> &bull; <a href="javascript:duplicate(\''.$t.'\')">DUPLICATE</a> &bull; <a href="?export='.$t.'">EXPORT</a>';
 			$schemalayout.='<ul>';
 			foreach($columns as $c) $schemalayout.='<li onclick="insert(\''.$c.'\')" style="cursor: grab;">'.$c.' <span class="icon-edit"></span></li>';
 			$schemalayout.='</ul>';
@@ -318,6 +367,18 @@
 							textarea.value = val.slice(0, start) + text + val.slice(end);
 							textarea.focus();
 							textarea.setSelectionRange(start, start+text.length);
+						}
+						function duplicate(table){
+							if(confirm("Do you really want to duplicate this table?")){
+								let textarea = document.getElementById("sql");
+								let form = document.getElementById("sqlform");
+								textarea.value = "CREATE TABLE `" + table + "_copy` AS SELECT * FROM `" + table + "`;"
+								form.submit();
+							}
+						}
+						function proposeSql(sql){
+							let textarea = document.getElementById("sql");
+							textarea.value = b64_to_utf8(sql);
 						}
 						function editThisData(cell,table,primary,column){
 							let edit = cell.getAttribute("data-edit");
