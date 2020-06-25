@@ -201,7 +201,7 @@
 			// result layout if user execute a simple sql
 			$resultlayout .= '<div class="row">';
 			$resultlayout .= '<div class="col-lg-12 col-md-12">';
-			$sqls = explode(";",$_POST['sql']);
+			$sqls = explode(";\r\n",$_POST['sql']);
 			$i=0;
 			foreach($sqls as $sql){
 				$sql = trim($sql);
