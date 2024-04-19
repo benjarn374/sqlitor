@@ -7,10 +7,10 @@
 		"SELECT" => "SELECT * FROM `table_name` WHERE condition1, condition2 ORDER BY column1;",
 		"UPDATE" => "UPDATE `table_name` SET column1 = value1, column2 = value2 WHERE condition1, condition2;",
 		"INSERT" => "INSERT INTO `table_name` (column1, column2) VALUES (value1, value2);",
-		"CREATE" => "CREATE TABLE `table_name` (column1 INTEGER, column2 TEXT);",
+		"CREATE" => "CREATE TABLE `table_name` (id INTEGER PRIMARY KEY, column1 TEXT);",
 		"ALTER" => "ALTER TABLE `table_name` ADD column3 TEXT;",
 		"DROP" => "DROP TABLE `table_name`;",
-		"DELETE" => "DELETE FROM `table_name` WHERE condition1, condition2;"
+		"DELETE" => "DELETE FROM `table_name` WHERE column1 = 'value1' AND column2 = 'value2';"
 	);
 	// render view
 	function render($html){
