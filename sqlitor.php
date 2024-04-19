@@ -336,7 +336,7 @@
 		// list of basic SQL cmds btns
 		foreach($cmds as $c => $cmd) $cmdslayout .="<input type=\"button\" value=\"$c\" onclick=\"cmd('$cmd')\" style='cursor: grab;'>";
 		// history list 
-		foreach(array_slice(array_reverse($history ?? []),0,10) as $cmd) $historylayout .= "<p onclick=\"cmd(this.innerHTML)\" class=\"historyelement\">$cmd</p>";
+		foreach(array_slice(array_reverse($history),0,10) as $cmd) $historylayout .= "<p onclick=\"cmd(this.innerHTML)\" class=\"historyelement\">$cmd</p>";
 		// schema column layout
 		$tables = array_column($pdo->query("SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%';")->fetchAll(),'name');
 		foreach($tables as $t){ $schema[$t] = array_column($pdo->query("PRAGMA table_info($t)")->fetchAll(),'name');}
